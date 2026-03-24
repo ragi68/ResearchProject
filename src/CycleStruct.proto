@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+import "nanopb.proto";
+
+message AD_ChannelEntry {
+    float    avgPps  = 1;
+    uint32   dwellMs = 2;
+    float    zScore  = 3;
+}
+
+message AD_SerialPacket {
+    uint32          magic        = 1;
+    uint32          type         = 2;
+    uint32          cycleNum     = 3;
+    uint32          cycleTotal   = 4;
+    uint32          allTimeTotal = 5;
+    float           globalMean   = 6;
+    float           globalStdDev = 7;
+    repeated AD_ChannelEntry channels = 8 [(nanopb).max_count = 13];
+}
