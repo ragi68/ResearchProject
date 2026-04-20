@@ -4,13 +4,13 @@ ESP32 Channel Hopper — Statistical Analysis
 Reads the CSV files produced by experiment.py and computes
 paper-quality statistics comparing Round-Robin vs Adaptive hopping
 across all tested cycle times.
- 
+
 Outputs:
   analysis/summary_stats.json      — machine-readable summary
   analysis/paper_table.txt         — LaTeX-ready table
   analysis/channel_bias_report.txt — per-channel dwell distribution analysis
   analysis/figures/                — matplotlib charts (PNG + SVG)
- 
+
 Metrics computed
 ----------------
 1.  Packets per second (PPS) — primary throughput metric
@@ -30,7 +30,7 @@ Metrics computed
 9.  Dwell standard deviation over time — stability measure
 10. Bootstrap 95% CI on all key metrics (1000 resamples)
 """
- 
+
 import csv
 import json
 import math
@@ -40,7 +40,7 @@ import os
 import sys
 from collections import defaultdict
 from typing import List, Dict, Tuple
- 
+
 try:
     import matplotlib
     matplotlib.use("Agg")
@@ -51,12 +51,12 @@ except ImportError:
     HAVE_MPL = False
     print("matplotlib not found — skipping figure generation. "
           "Install with: pip install matplotlib")
- 
+
 NUM_CHANNELS = 13
- 
- 
+
+
 # ─── I/O helpers ─────────────────────────────────────────────────────────────
- 
+
 def load_cycles(path: str) -> List[Dict]:
     rows = []
     with open(path, newline="") as f:
@@ -73,7 +73,7 @@ def load_cycles(path: str) -> List[Dict]:
                 r["global_std_dev"] = float(r["global_std_dev"])
             rows.append(r)
     return rows
- 
+
 def load_channels(path: str) -> List[Dict]:
     rows = []
     with open(path, newline="") as f:
@@ -90,10 +90,10 @@ def load_channels(path: str) -> List[Dict]:
             if r["z_score"]:   r["z_score"]  = float(r["z_score"])
             rows.append(r)
     return rows
- 
- 
+
+
 # ─── Statistical primitives ───────────────────────────────────────────────────
- 
+
 def mean(xs): return sum(xs) / len(xs) if xs else 0.0
 def variance(xs):
     if len(xs) < 2: return 0.0
@@ -101,7 +101,7 @@ def variance(xs):
 def stdev(xs): return math.sqrt(variance(xs))
 def median(xs): return statistics.median(xs) if xs else 0.0
 def cv(xs): m = mean(xs); return stdev(xs) / m if m else 0.0
- 
+
 def gini(values):
     """Gini coefficient of a list of non-negative values."""
     v = sorted(max(x, 0) for x in values)
@@ -109,14 +109,14 @@ def gini(values):
     if s == 0 or n == 0: return 0.0
     rank_sum = sum((2*i - n - 1) * vi for i, vi in enumerate(v, 1))
     return rank_sum / (n * s)
- 
+
 def shannon_entropy(values):
     """Shannon entropy (bits) of a discrete distribution."""
     s = sum(values)
     if s == 0: return 0.0
     probs = [v / s for v in values if v > 0]
     return -sum(p * math.log2(p) for p in probs)
- 
+
 def bootstrap_ci(data, stat_fn, n_boot=1000, alpha=0.05):
     """Bootstrap confidence interval for stat_fn applied to data."""
     if len(data) < 2: return (stat_fn(data), stat_fn(data))
@@ -128,7 +128,7 @@ def bootstrap_ci(data, stat_fn, n_boot=1000, alpha=0.05):
     lo = boot[int(alpha/2 * n_boot)]
     hi = boot[int((1 - alpha/2) * n_boot)]
     return lo, hi
- 
+
 def pearson(xs, ys):
     """Pearson correlation coefficient."""
     n = len(xs)
@@ -137,30 +137,30 @@ def pearson(xs, ys):
     num = sum((x - mx)*(y - my) for x, y in zip(xs, ys))
     den = math.sqrt(sum((x-mx)**2 for x in xs) * sum((y-my)**2 for y in ys))
     return num / den if den else 0.0
- 
- 
+
+
 # ─── Core analysis ───────────────────────────────────────────────────────────
- 
+
 def group_by_phase(cycles: List[Dict]) -> Dict[str, List[Dict]]:
     g = defaultdict(list)
     for r in cycles: g[r["phase"]].append(r)
     return dict(g)
- 
+
 def phase_key(phase: str):
     """Sort key: RR first, then AD by cycle time."""
     if "rr" in phase: return (0, 0)
     ms = int(phase.split("_")[-1].replace("ms", ""))
     return (1, ms)
- 
+
 def compute_phase_stats(cycles: List[Dict]) -> Dict:
     pps_vals = [r["packets_per_sec_cycle"] for r in cycles]
     total_pkts = sum(r["cycle_total"] for r in cycles)
     n_cycles   = len(cycles)
     mode       = cycles[0]["mode"]
     cycle_ms   = cycles[0]["cycle_time_ms"]
- 
+
     ci_lo, ci_hi = bootstrap_ci(pps_vals, mean)
- 
+
     stats = {
         "mode":           mode,
         "cycle_time_ms":  cycle_ms,
@@ -173,16 +173,16 @@ def compute_phase_stats(cycles: List[Dict]) -> Dict:
         "ci95_lo":        round(ci_lo, 4),
         "ci95_hi":        round(ci_hi, 4),
     }
- 
+
     if mode == "ad":
         if cycles[0].get("global_mean"):
             gm_vals = [r["global_mean"] for r in cycles if r.get("global_mean")]
             stats["mean_global_mean"]   = round(mean(gm_vals), 4)
             stats["mean_global_stddev"] = round(
                 mean([r["global_std_dev"] for r in cycles if r.get("global_std_dev")]), 4)
- 
+
     return stats
- 
+
 def compute_channel_stats(chan_rows: List[Dict], phase: str) -> List[Dict]:
     by_ch = defaultdict(list)
     for r in chan_rows:
@@ -205,7 +205,7 @@ def compute_channel_stats(chan_rows: List[Dict], phase: str) -> List[Dict]:
             "total_packets": sum(r["packets"] for r in rows if r.get("packets")),
         })
     return result
- 
+
 def convergence_analysis(chan_rows: List[Dict], phase: str) -> Dict:
     """
     Measure how many cycles it takes for dwell allocation to stabilise.
@@ -215,30 +215,30 @@ def convergence_analysis(chan_rows: List[Dict], phase: str) -> Dict:
     """
     if "rr" in phase:
         return {"convergence_cycle": 0, "note": "RR is static — always converged"}
- 
+
     by_cycle = defaultdict(lambda: [0]*NUM_CHANNELS)
     for r in chan_rows:
         if r["phase"] == phase and r.get("dwell_ms"):
             by_cycle[r["cycle_num"]][r["ch"]-1] = r["dwell_ms"]
- 
+
     cycles_sorted = sorted(by_cycle.keys())
     if len(cycles_sorted) < 10:
         return {"convergence_cycle": None, "note": "Insufficient data"}
- 
+
     # Final allocation = mean of last 10 cycles
     final_vec = [0.0] * NUM_CHANNELS
     for cyc in cycles_sorted[-10:]:
         for i, v in enumerate(by_cycle[cyc]):
             final_vec[i] += v / 10.0
- 
+
     cycle_ms = 0
     for r in chan_rows:
         if r["phase"] == phase and r.get("cycle_time_ms"):
             cycle_ms = r["cycle_time_ms"]; break
- 
+
     max_dist = math.sqrt(NUM_CHANNELS * (cycle_ms ** 2))
     threshold = 0.05 * max_dist
- 
+
     for cyc in cycles_sorted:
         vec = by_cycle[cyc]
         dist = math.sqrt(sum((v - f)**2 for v, f in zip(vec, final_vec)))
@@ -246,10 +246,10 @@ def convergence_analysis(chan_rows: List[Dict], phase: str) -> Dict:
             return {"convergence_cycle": cyc,
                     "threshold_pct": 5,
                     "note": f"Dwell allocation within 5% of final by cycle {cyc}"}
- 
+
     return {"convergence_cycle": None,
             "note": "Did not converge within experiment window"}
- 
+
 def zscore_dwell_correlation(chan_rows: List[Dict], phase: str) -> float:
     """Pearson r between z-score and dwell_ms across all cycles."""
     zs, ds = [], []
@@ -258,7 +258,7 @@ def zscore_dwell_correlation(chan_rows: List[Dict], phase: str) -> float:
             zs.append(r["z_score"])
             ds.append(r["dwell_ms"])
     return round(pearson(zs, ds), 4) if zs else 0.0
- 
+
 def gini_per_phase(chan_rows: List[Dict], phase: str) -> Dict:
     """Gini coefficient of dwell allocation, averaged across cycles."""
     by_cycle = defaultdict(list)
@@ -273,10 +273,10 @@ def gini_per_phase(chan_rows: List[Dict], phase: str) -> Dict:
         "mean_entropy": round(mean(entropies), 4),
         "max_entropy":  round(math.log2(NUM_CHANNELS), 4),
     }
- 
- 
+
+
 # ─── Report generators ────────────────────────────────────────────────────────
- 
+
 def build_latex_table(phase_order, phase_stats, rr_mean_pps):
     """Generate a LaTeX tabular suitable for direct inclusion in a paper."""
     lines = [
@@ -304,15 +304,15 @@ def build_latex_table(phase_order, phase_stats, rr_mean_pps):
         r"\end{table}",
     ]
     return "\n".join(lines)
- 
+
 def build_text_report(phase_order, phase_stats, chan_gini,
                       convergence, corr, rr_phase):
     lines = ["=" * 70,
              "  ESP32 ADAPTIVE CHANNEL HOPPER — ANALYSIS REPORT",
              "=" * 70, ""]
- 
+
     rr_pps = phase_stats[rr_phase]["mean_pps"] if rr_phase else None
- 
+
     lines.append("THROUGHPUT SUMMARY")
     lines.append("-" * 40)
     for phase in phase_order:
@@ -327,7 +327,7 @@ def build_text_report(phase_order, phase_stats, chan_gini,
             f"Ratio vs RR: {ratio:.3f}x"
         )
     lines.append("")
- 
+
     lines.append("DWELL DISTRIBUTION (Gini / Shannon Entropy)")
     lines.append("-" * 40)
     for phase in phase_order:
@@ -342,7 +342,7 @@ def build_text_report(phase_order, phase_stats, chan_gini,
             f"(max {g.get('max_entropy', math.log2(NUM_CHANNELS)):.4f})"
         )
     lines.append("")
- 
+
     lines.append("CONVERGENCE ANALYSIS (Adaptive phases only)")
     lines.append("-" * 40)
     for phase, result in convergence.items():
@@ -355,7 +355,7 @@ def build_text_report(phase_order, phase_stats, chan_gini,
             f"({result.get('note','')})"
         )
     lines.append("")
- 
+
     lines.append("z-SCORE ↔ DWELL CORRELATION (Adaptive phases)")
     lines.append("-" * 40)
     for phase, r_val in corr.items():
@@ -363,12 +363,12 @@ def build_text_report(phase_order, phase_stats, chan_gini,
         T = s["cycle_time_ms"] / 1000
         lines.append(f"  T={T:.0f}s | Pearson r = {r_val:.4f}")
     lines.append("")
- 
+
     return "\n".join(lines)
- 
- 
+
+
 # ─── Figures ──────────────────────────────────────────────────────────────────
- 
+
 def plot_pps_boxplot(phase_order, cycles_by_phase, phase_stats, out_dir):
     fig, ax = plt.subplots(figsize=(10, 5))
     labels, data = [], []
@@ -390,33 +390,66 @@ def plot_pps_boxplot(phase_order, cycles_by_phase, phase_stats, out_dir):
     plt.savefig(f"{out_dir}/pps_boxplot.svg")
     plt.close()
     print("  Saved: pps_boxplot.png / .svg")
- 
+
 def plot_dwell_heatmap(chan_rows, phase_order, phase_stats, out_dir):
-    fig, axes = plt.subplots(1, len(phase_order), figsize=(4*len(phase_order), 4),
-                              sharey=True)
+    colors = ["#4C72B0", "#DD8452", "#55A868", "#C44E52"]
+    # sharey=True only shares the Y axis (channel numbers), NOT the X axis (ms)
+    fig, axes = plt.subplots(1, len(phase_order),
+                              figsize=(4*len(phase_order), 5),
+                              sharey=True, sharex=False)
     if len(phase_order) == 1: axes = [axes]
-    for ax, phase in zip(axes, phase_order):
+
+    for idx, (ax, phase) in enumerate(zip(axes, phase_order)):
         s = phase_stats[phase]
         mode = "RR" if s["mode"] == "rr" else f"AD-{s['cycle_time_ms']//1000}s"
+        cycle_ms = s["cycle_time_ms"]
+
         by_ch = defaultdict(list)
         for r in chan_rows:
-            if r["phase"] == phase and r.get("dwell_ms"):
-                by_ch[r["ch"]].append(r["dwell_ms"])
-        means = [mean(by_ch.get(ch, [0])) for ch in range(1, NUM_CHANNELS+1)]
-        ax.barh(range(1, NUM_CHANNELS+1), means, color="#4C72B0", alpha=0.75)
-        ax.set_xlabel("Mean dwell (ms)")
+            if r["phase"] != phase:
+                continue
+            dm = r.get("dwell_ms")
+            if dm != "" and dm is not None:
+                try:
+                    by_ch[r["ch"]].append(int(dm))
+                except (ValueError, TypeError):
+                    pass
+
+        means = [mean(by_ch.get(ch, [cycle_ms // NUM_CHANNELS]))
+                 for ch in range(1, NUM_CHANNELS+1)]
+
+        bars = ax.barh(range(1, NUM_CHANNELS+1), means,
+                       color=colors[idx % len(colors)], alpha=0.75)
+
+        # Label each bar with its ms value
+        max_val = max(means) if means else 1
+        for bar, val in zip(bars, means):
+            ax.text(val + max_val * 0.02, bar.get_y() + bar.get_height()/2,
+                    f"{int(val)}", va="center", ha="left", fontsize=7)
+
+        # Independent x-axis per panel
+        ax.set_xlim(0, max_val * 1.25)
+        ax.set_xlabel("Mean dwell (ms)", fontsize=9)
         ax.set_title(mode, fontsize=10)
         ax.set_yticks(range(1, NUM_CHANNELS+1))
         ax.set_yticklabels([str(c) for c in range(1, NUM_CHANNELS+1)], fontsize=8)
         ax.grid(axis="x", alpha=0.3)
-    axes[0].set_ylabel("Channel")
-    fig.suptitle("Mean dwell allocation per channel")
+
+        # Red dashed line at equal-split reference
+        equal_dwell = cycle_ms / NUM_CHANNELS
+        ax.axvline(x=equal_dwell, color="red", linestyle="--",
+                   linewidth=0.9, alpha=0.7, label=f"Equal ({int(equal_dwell)}ms)")
+        ax.legend(fontsize=7, loc="lower right")
+
+    axes[0].set_ylabel("Channel", fontsize=9)
+    fig.suptitle("Mean dwell allocation per channel\n"
+                 "(red dashed = equal-split baseline)", fontsize=11)
     plt.tight_layout()
     plt.savefig(f"{out_dir}/dwell_heatmap.png", dpi=150)
     plt.savefig(f"{out_dir}/dwell_heatmap.svg")
     plt.close()
     print("  Saved: dwell_heatmap.png / .svg")
- 
+
 def plot_convergence(chan_rows, ad_phases, phase_stats, out_dir):
     fig, axes = plt.subplots(1, len(ad_phases), figsize=(5*len(ad_phases), 4),
                               sharey=True)
@@ -446,7 +479,7 @@ def plot_convergence(chan_rows, ad_phases, phase_stats, out_dir):
     plt.savefig(f"{out_dir}/convergence.svg")
     plt.close()
     print("  Saved: convergence.png / .svg")
- 
+
 def plot_efficiency_ratio(phase_stats, rr_phase, ad_phases, out_dir):
     rr_pps = phase_stats[rr_phase]["mean_pps"]
     labels  = [f"AD-{phase_stats[p]['cycle_time_ms']//1000}s" for p in ad_phases]
@@ -469,10 +502,10 @@ def plot_efficiency_ratio(phase_stats, rr_phase, ad_phases, out_dir):
     plt.savefig(f"{out_dir}/efficiency_ratio.svg")
     plt.close()
     print("  Saved: efficiency_ratio.png / .svg")
- 
- 
+
+
 # ─── Main ─────────────────────────────────────────────────────────────────────
- 
+
 def main():
     import argparse
     parser = argparse.ArgumentParser(description="Analyze hopper experiment data")
@@ -480,41 +513,41 @@ def main():
     parser.add_argument("--out",   default="analysis", help="Output directory")
     parser.add_argument("--seed",  type=int, default=42, help="Random seed for bootstrap")
     args = parser.parse_args()
- 
+
     random.seed(args.seed)
     os.makedirs(args.out, exist_ok=True)
     fig_dir = f"{args.out}/figures"
     if HAVE_MPL: os.makedirs(fig_dir, exist_ok=True)
- 
+
     print("Loading data...")
     cycles   = load_cycles(f"{args.data}/cycles.csv")
     chan_rows = load_channels(f"{args.data}/channels.csv")
- 
+
     cycles_by_phase = group_by_phase(cycles)
     phase_order = sorted(cycles_by_phase.keys(), key=phase_key)
     print(f"  Phases found: {phase_order}")
- 
+
     print("\nComputing per-phase statistics...")
     phase_stats = {}
     for phase in phase_order:
         phase_stats[phase] = compute_phase_stats(cycles_by_phase[phase])
- 
+
     rr_phases = [p for p in phase_order if phase_stats[p]["mode"] == "rr"]
     ad_phases  = [p for p in phase_order if phase_stats[p]["mode"] == "ad"]
     rr_phase   = rr_phases[0] if rr_phases else None
     rr_pps     = phase_stats[rr_phase]["mean_pps"] if rr_phase else None
- 
+
     print("Computing Gini / entropy of dwell allocation...")
     chan_gini = {phase: gini_per_phase(chan_rows, phase) for phase in phase_order}
- 
+
     print("Computing convergence analysis...")
     convergence = {phase: convergence_analysis(chan_rows, phase)
                    for phase in ad_phases}
- 
+
     print("Computing z-score ↔ dwell correlation...")
     corr = {phase: zscore_dwell_correlation(chan_rows, phase)
             for phase in ad_phases}
- 
+
     # Build full summary
     summary = {
         "phase_stats": phase_stats,
@@ -527,17 +560,17 @@ def main():
             phase: round(phase_stats[phase]["mean_pps"] / rr_pps, 4)
             for phase in ad_phases
         }
- 
+
     # Write JSON
     with open(f"{args.out}/summary_stats.json", "w") as f:
         json.dump(summary, f, indent=2)
     print(f"\nWrote: {args.out}/summary_stats.json")
- 
+
     # Write LaTeX table
     with open(f"{args.out}/paper_table.tex", "w", encoding="utf-8") as f:
         f.write(build_latex_table(phase_order, phase_stats, rr_pps))
     print(f"Wrote: {args.out}/paper_table.tex")
- 
+
     # Write text report
     report = build_text_report(phase_order, phase_stats, chan_gini,
                                 convergence, corr, rr_phase)
@@ -545,7 +578,7 @@ def main():
         f.write(report)
     print(f"Wrote: {args.out}/analysis_report.txt")
     print("\n" + report)
- 
+
     # Generate figures
     if HAVE_MPL:
         print("\nGenerating figures...")
@@ -558,10 +591,9 @@ def main():
         print(f"Figures saved to: {fig_dir}/")
     else:
         print("Skipping figures (matplotlib not installed)")
- 
+
     print("\nAnalysis complete.")
- 
- 
+
+
 if __name__ == "__main__":
     main()
- 

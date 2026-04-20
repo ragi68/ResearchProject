@@ -288,10 +288,12 @@ class PacketReader:
 # ─── Experiment orchestrator ──────────────────────────────────────────────────
 
 PHASES = [
-    ("rr",  10000, CMD_MODE_RR,                "Round-Robin baseline (10 s cycle)"),
-    ("ad",   3000, CMD_MODE_AD | CMD_CYCLE_3S, "Adaptive 3 s cycle"),
-    ("ad",   5000, CMD_MODE_AD | CMD_CYCLE_5S, "Adaptive 5 s cycle"),
-    ("ad",   7000, CMD_MODE_AD | CMD_CYCLE_7S, "Adaptive 7 s cycle"),
+    # (mode, cycle_ms, (cmd_bytes...), description)
+    # Commands are sent as separate bytes — never ORed together
+    ("rr",  10000, (CMD_MODE_RR,),                        "Round-Robin baseline (10 s cycle)"),
+    ("ad",   3000, (CMD_MODE_AD, CMD_CYCLE_3S),            "Adaptive 3 s cycle"),
+    ("ad",   5000, (CMD_MODE_AD, CMD_CYCLE_5S),            "Adaptive 5 s cycle"),
+    ("ad",   7000, (CMD_MODE_AD, CMD_CYCLE_7S),            "Adaptive 7 s cycle"),
 ]
 
 class Experiment:
@@ -421,11 +423,13 @@ class Experiment:
             phase_name = f"P{phase_idx+1}_{mode}_{cycle_ms}ms"
             self.log(f"--- Phase {phase_idx+1}: {desc} ---")
 
-            # Send command to ESP32
+            # Send command bytes to ESP32 (each byte separately, small gap between)
             self.reader.mode          = mode
             self.reader.cycle_time_ms = cycle_ms
-            self.reader.send_cmd(cmd)
-            time.sleep(0.5)   # let ESP32 reset state
+            for cmd_byte in cmd:
+                self.reader.send_cmd(cmd_byte)
+                time.sleep(0.05)  # give firmware time to process each byte
+            time.sleep(0.5)   # let ESP32 settle into new mode
 
             # Drain stale packets from before command
             while not self.pkt_queue.empty():

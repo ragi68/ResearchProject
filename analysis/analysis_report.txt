@@ -4,20 +4,26 @@
 
 THROUGHPUT SUMMARY
 ----------------------------------------
-  Round-Robin    T=10s | Mean PPS:    39.86  CI95: [37.91, 41.84]  Ratio vs RR: 1.000x
-  Round-Robin    T=3s | Mean PPS:   140.08  CI95: [133.78, 146.44]  Ratio vs RR: 3.515x
-  Round-Robin    T=5s | Mean PPS:    66.46  CI95: [62.52, 69.97]  Ratio vs RR: 1.667x
-  Round-Robin    T=7s | Mean PPS:    52.60  CI95: [49.94, 55.32]  Ratio vs RR: 1.320x
+  Round-Robin    T=10s | Mean PPS:    51.43  CI95: [49.14, 53.86]  Ratio vs RR: 1.000x
+  Adaptive       T=3s | Mean PPS:    85.80  CI95: [83.39, 88.05]  Ratio vs RR: 1.668x
+  Adaptive       T=5s | Mean PPS:    80.46  CI95: [78.02, 83.06]  Ratio vs RR: 1.565x
+  Adaptive       T=7s | Mean PPS:    88.64  CI95: [86.14, 91.12]  Ratio vs RR: 1.724x
 
 DWELL DISTRIBUTION (Gini / Shannon Entropy)
 ----------------------------------------
   Round-Robin    T=10s | Gini: 0.0000  Entropy: 3.7004 bits (max 3.7004)
-  Round-Robin    T=3s | Gini: 0.0000  Entropy: 3.7004 bits (max 3.7004)
-  Round-Robin    T=5s | Gini: 0.0000  Entropy: 3.7004 bits (max 3.7004)
-  Round-Robin    T=7s | Gini: 0.0000  Entropy: 3.7004 bits (max 3.7004)
+  Adaptive       T=3s | Gini: 0.1838  Entropy: 3.5890 bits (max 3.7004)
+  Adaptive       T=5s | Gini: 0.1824  Entropy: 3.5904 bits (max 3.7004)
+  Adaptive       T=7s | Gini: 0.1809  Entropy: 3.5905 bits (max 3.7004)
 
 CONVERGENCE ANALYSIS (Adaptive phases only)
 ----------------------------------------
+  T=3s | Converged at cycle: 4  (Dwell allocation within 5% of final by cycle 4)
+  T=5s | Converged at cycle: 104  (Dwell allocation within 5% of final by cycle 104)
+  T=7s | Converged at cycle: 164  (Dwell allocation within 5% of final by cycle 164)
 
 z-SCORE ↔ DWELL CORRELATION (Adaptive phases)
 ----------------------------------------
+  T=3s | Pearson r = 0.9982
+  T=5s | Pearson r = 0.9980
+  T=7s | Pearson r = 0.9986

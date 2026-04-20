@@ -4,49 +4,55 @@
       "mode": "rr",
       "cycle_time_ms": 10000,
       "n_cycles": 25,
-      "total_packets": 9964,
-      "mean_pps": 39.856,
-      "median_pps": 38.1,
-      "std_pps": 5.104,
-      "cv_pps": 0.1281,
-      "ci95_lo": 37.908,
-      "ci95_hi": 41.844
+      "total_packets": 12857,
+      "mean_pps": 51.428,
+      "median_pps": 51.0,
+      "std_pps": 6.0691,
+      "cv_pps": 0.118,
+      "ci95_lo": 49.136,
+      "ci95_hi": 53.864
     },
     "P2_ad_3000ms": {
-      "mode": "rr",
+      "mode": "ad",
       "cycle_time_ms": 3000,
-      "n_cycles": 26,
-      "total_packets": 10926,
-      "mean_pps": 140.0769,
-      "median_pps": 137.0,
-      "std_pps": 18.2748,
-      "cv_pps": 0.1305,
-      "ci95_lo": 133.782,
-      "ci95_hi": 146.4359
+      "n_cycles": 96,
+      "total_packets": 24710,
+      "mean_pps": 85.7986,
+      "median_pps": 87.0,
+      "std_pps": 10.706,
+      "cv_pps": 0.1248,
+      "ci95_lo": 83.3889,
+      "ci95_hi": 88.0521,
+      "mean_global_mean": 51.2633,
+      "mean_global_stddev": 80.4327
     },
     "P3_ad_5000ms": {
-      "mode": "rr",
+      "mode": "ad",
       "cycle_time_ms": 5000,
-      "n_cycles": 24,
-      "total_packets": 7975,
-      "mean_pps": 66.4583,
-      "median_pps": 68.5,
-      "std_pps": 9.4194,
-      "cv_pps": 0.1417,
-      "ci95_lo": 62.5167,
-      "ci95_hi": 69.975
+      "n_cycles": 56,
+      "total_packets": 22529,
+      "mean_pps": 80.4607,
+      "median_pps": 80.3,
+      "std_pps": 9.5598,
+      "cv_pps": 0.1188,
+      "ci95_lo": 78.0179,
+      "ci95_hi": 83.0643,
+      "mean_global_mean": 47.2163,
+      "mean_global_stddev": 74.7395
     },
     "P4_ad_7000ms": {
-      "mode": "rr",
+      "mode": "ad",
       "cycle_time_ms": 7000,
-      "n_cycles": 26,
-      "total_packets": 9573,
-      "mean_pps": 52.5989,
-      "median_pps": 51.9286,
-      "std_pps": 7.0851,
-      "cv_pps": 0.1347,
-      "ci95_lo": 49.9396,
-      "ci95_hi": 55.3242
+      "n_cycles": 37,
+      "total_packets": 22957,
+      "mean_pps": 88.6371,
+      "median_pps": 89.4286,
+      "std_pps": 7.6131,
+      "cv_pps": 0.0859,
+      "ci95_lo": 86.139,
+      "ci95_hi": 91.1236,
+      "mean_global_mean": 52.5114,
+      "mean_global_stddev": 84.2433
     }
   },
   "dwell_distribution": {
@@ -57,25 +63,49 @@
       "max_entropy": 3.7004
     },
     "P2_ad_3000ms": {
-      "mean_gini": 0.0,
-      "std_gini": 0.0,
-      "mean_entropy": 3.7004,
+      "mean_gini": 0.1838,
+      "std_gini": 0.0031,
+      "mean_entropy": 3.589,
       "max_entropy": 3.7004
     },
     "P3_ad_5000ms": {
-      "mean_gini": 0.0,
-      "std_gini": 0.0,
-      "mean_entropy": 3.7004,
+      "mean_gini": 0.1824,
+      "std_gini": 0.0027,
+      "mean_entropy": 3.5904,
       "max_entropy": 3.7004
     },
     "P4_ad_7000ms": {
-      "mean_gini": 0.0,
-      "std_gini": 0.0,
-      "mean_entropy": 3.7004,
+      "mean_gini": 0.1809,
+      "std_gini": 0.0021,
+      "mean_entropy": 3.5905,
       "max_entropy": 3.7004
     }
   },
-  "convergence": {},
-  "zscore_dwell_correlation": {},
-  "efficiency_ratios": {}
+  "convergence": {
+    "P2_ad_3000ms": {
+      "convergence_cycle": 4,
+      "threshold_pct": 5,
+      "note": "Dwell allocation within 5% of final by cycle 4"
+    },
+    "P3_ad_5000ms": {
+      "convergence_cycle": 104,
+      "threshold_pct": 5,
+      "note": "Dwell allocation within 5% of final by cycle 104"
+    },
+    "P4_ad_7000ms": {
+      "convergence_cycle": 164,
+      "threshold_pct": 5,
+      "note": "Dwell allocation within 5% of final by cycle 164"
+    }
+  },
+  "zscore_dwell_correlation": {
+    "P2_ad_3000ms": 0.9982,
+    "P3_ad_5000ms": 0.998,
+    "P4_ad_7000ms": 0.9986
+  },
+  "efficiency_ratios": {
+    "P2_ad_3000ms": 1.6683,
+    "P3_ad_5000ms": 1.5645,
+    "P4_ad_7000ms": 1.7235
+  }
 }
