@@ -1,0 +1,23 @@
+======================================================================
+  ESP32 ADAPTIVE CHANNEL HOPPER — ANALYSIS REPORT
+======================================================================
+
+THROUGHPUT SUMMARY
+----------------------------------------
+  Round-Robin    T=10s | Mean PPS:    39.86  CI95: [37.91, 41.84]  Ratio vs RR: 1.000x
+  Round-Robin    T=3s | Mean PPS:   140.08  CI95: [133.78, 146.44]  Ratio vs RR: 3.515x
+  Round-Robin    T=5s | Mean PPS:    66.46  CI95: [62.52, 69.97]  Ratio vs RR: 1.667x
+  Round-Robin    T=7s | Mean PPS:    52.60  CI95: [49.94, 55.32]  Ratio vs RR: 1.320x
+
+DWELL DISTRIBUTION (Gini / Shannon Entropy)
+----------------------------------------
+  Round-Robin    T=10s | Gini: 0.0000  Entropy: 3.7004 bits (max 3.7004)
+  Round-Robin    T=3s | Gini: 0.0000  Entropy: 3.7004 bits (max 3.7004)
+  Round-Robin    T=5s | Gini: 0.0000  Entropy: 3.7004 bits (max 3.7004)
+  Round-Robin    T=7s | Gini: 0.0000  Entropy: 3.7004 bits (max 3.7004)
+
+CONVERGENCE ANALYSIS (Adaptive phases only)
+----------------------------------------
+
+z-SCORE ↔ DWELL CORRELATION (Adaptive phases)
+----------------------------------------

@@ -1,0 +1,11 @@
+[2026-04-20T03:34:28.648858+00:00] === Experiment start ===
+[2026-04-20T03:34:28.649150+00:00] Port=COM7 Baud=115200 Phase duration=300s Warmup cycles=3
+[2026-04-20T03:34:28.652199+00:00] --- Phase 1: Round-Robin baseline (10 s cycle) ---
+[2026-04-20T03:39:29.284928+00:00]   Collected 25 cycles (after 3 warmup skipped)
+[2026-04-20T03:39:29.285754+00:00] --- Phase 2: Adaptive 3 s cycle ---
+[2026-04-20T03:44:30.227904+00:00]   Collected 26 cycles (after 3 warmup skipped)
+[2026-04-20T03:44:30.228410+00:00] --- Phase 3: Adaptive 5 s cycle ---
+[2026-04-20T03:49:31.174179+00:00]   Collected 24 cycles (after 3 warmup skipped)
+[2026-04-20T03:49:31.178513+00:00] --- Phase 4: Adaptive 7 s cycle ---
+[2026-04-20T03:54:32.146437+00:00]   Collected 26 cycles (after 3 warmup skipped)
+[2026-04-20T03:54:32.189071+00:00] === Experiment complete ===

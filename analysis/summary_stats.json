@@ -1,0 +1,81 @@
+{
+  "phase_stats": {
+    "P1_rr_10000ms": {
+      "mode": "rr",
+      "cycle_time_ms": 10000,
+      "n_cycles": 25,
+      "total_packets": 9964,
+      "mean_pps": 39.856,
+      "median_pps": 38.1,
+      "std_pps": 5.104,
+      "cv_pps": 0.1281,
+      "ci95_lo": 37.908,
+      "ci95_hi": 41.844
+    },
+    "P2_ad_3000ms": {
+      "mode": "rr",
+      "cycle_time_ms": 3000,
+      "n_cycles": 26,
+      "total_packets": 10926,
+      "mean_pps": 140.0769,
+      "median_pps": 137.0,
+      "std_pps": 18.2748,
+      "cv_pps": 0.1305,
+      "ci95_lo": 133.782,
+      "ci95_hi": 146.4359
+    },
+    "P3_ad_5000ms": {
+      "mode": "rr",
+      "cycle_time_ms": 5000,
+      "n_cycles": 24,
+      "total_packets": 7975,
+      "mean_pps": 66.4583,
+      "median_pps": 68.5,
+      "std_pps": 9.4194,
+      "cv_pps": 0.1417,
+      "ci95_lo": 62.5167,
+      "ci95_hi": 69.975
+    },
+    "P4_ad_7000ms": {
+      "mode": "rr",
+      "cycle_time_ms": 7000,
+      "n_cycles": 26,
+      "total_packets": 9573,
+      "mean_pps": 52.5989,
+      "median_pps": 51.9286,
+      "std_pps": 7.0851,
+      "cv_pps": 0.1347,
+      "ci95_lo": 49.9396,
+      "ci95_hi": 55.3242
+    }
+  },
+  "dwell_distribution": {
+    "P1_rr_10000ms": {
+      "mean_gini": 0.0,
+      "std_gini": 0.0,
+      "mean_entropy": 3.7004,
+      "max_entropy": 3.7004
+    },
+    "P2_ad_3000ms": {
+      "mean_gini": 0.0,
+      "std_gini": 0.0,
+      "mean_entropy": 3.7004,
+      "max_entropy": 3.7004
+    },
+    "P3_ad_5000ms": {
+      "mean_gini": 0.0,
+      "std_gini": 0.0,
+      "mean_entropy": 3.7004,
+      "max_entropy": 3.7004
+    },
+    "P4_ad_7000ms": {
+      "mean_gini": 0.0,
+      "std_gini": 0.0,
+      "mean_entropy": 3.7004,
+      "max_entropy": 3.7004
+    }
+  },
+  "convergence": {},
+  "zscore_dwell_correlation": {},
+  "efficiency_ratios": {}
+}
